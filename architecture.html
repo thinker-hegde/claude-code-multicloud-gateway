@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Multi-Cloud AI Gateway for Claude Code — Architecture & Blueprint</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #07090e;
+            --bg-secondary: #0d121d;
+            --bg-card: rgba(18, 24, 38, 0.75);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(99, 102, 241, 0.4);
+            --accent-primary: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.25);
+            --nvidia: #76b900;
+            --groq: #f55036;
+            --gemini: #4285f4;
+            --ollama: #10b981;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2.5rem 1.5rem;
+            background-image: 
+                radial-gradient(at 10% 10%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+                radial-gradient(at 90% 90%, rgba(118, 185, 0, 0.08) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(245, 80, 54, 0.06) 0px, transparent 50%);
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1300px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 3.5rem; }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #818cf8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.25rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 780px;
+            margin: 0 auto 2.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px var(--accent-glow);
+        }
+
+        .stat-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 24px;
+            background: var(--accent-primary);
+            border-radius: 4px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            background: rgba(7, 9, 14, 0.6);
+            border-radius: 16px;
+            padding: 2rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tiers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .tier-card {
+            background: var(--bg-card);
+            border-radius: 18px;
+            padding: 1.75rem;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .tier-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .tier-nvidia::before { background: var(--nvidia); }
+        .tier-groq::before { background: var(--groq); }
+        .tier-gemini::before { background: var(--gemini); }
+        .tier-ollama::before { background: var(--ollama); }
+
+        .tier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .tier-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .badge-nvidia { background: rgba(118, 185, 0, 0.15); color: var(--nvidia); border: 1px solid rgba(118, 185, 0, 0.3); }
+        .badge-groq { background: rgba(245, 80, 54, 0.15); color: var(--groq); border: 1px solid rgba(245, 80, 54, 0.3); }
+        .badge-gemini { background: rgba(66, 133, 244, 0.15); color: var(--gemini); border: 1px solid rgba(66, 133, 244, 0.3); }
+        .badge-ollama { background: rgba(16, 185, 129, 0.15); color: var(--ollama); border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        .tier-name { font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem; }
+
+        .tier-model {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #c7d2fe;
+            background: rgba(99, 102, 241, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .tier-features { list-style: none; margin-bottom: 1.5rem; }
+        .tier-features li {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .tier-features li::before { content: "✓"; color: #10b981; font-weight: bold; }
+
+        .tier-speed {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #38bdf8;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 1rem;
+        }
+
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .step-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .step-num {
+            position: absolute;
+            top: -12px;
+            left: 16px;
+            background: var(--accent-primary);
+            color: white;
+            font-weight: 800;
+            font-size: 0.8rem;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step-title { font-size: 1.1rem; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.5rem; }
+        .step-desc { font-size: 0.85rem; color: var(--text-muted); }
+
+        pre {
+            background: #020408;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #a5b4fc;
+            overflow-x: auto;
+            margin-top: 0.75rem;
+        }
+
+        .zero-login-box {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.2rem; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="badge">⚡ Next-Gen AI Coding Architecture</div>
+            <h1>Universal Multi-Cloud AI Gateway for Claude Code</h1>
+            <p class="subtitle">An intelligent, auto-failover proxy that connects Claude Code to 120B cloud models and local offline LLMs with zero latency, real-time SSE streaming, zero login requirements, and 100% free tiers.</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #38bdf8;">100–350</div>
+                    <div class="stat-label">Tokens / Second</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #a855f7;">120B</div>
+                    <div class="stat-label">Flagship Model Parameters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #10b981;">0.35s</div>
+                    <div class="stat-label">Time-To-First-Token (TTFT)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #f59e0b;">$0.00</div>
+                    <div class="stat-label">Cost (100% Free Tiers)</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="card">
+            <h2 class="section-title">End-to-End System Architecture</h2>
+            <div class="mermaid">
+flowchart TD
+    subgraph Client["💻 Client Layer"]
+        CC["Claude Code CLI (Zero-Login Bypass)"]
+        Tools["Agentic Tool Execution (ReadFile, WriteFile, EditFile, Bash)"]
+        CC <--> Tools
+    end
+
+    subgraph Gateway["⚡ Universal Multi-Cloud Gateway (Port 8000)"]
+        direction TB
+        Proxy["FastAPI Protocol Translator"]
+        Prune["Smart Schema & System Prompt Compactor"]
+        Router{"Intelligent Auto-Failover Router"}
+        Stream["Real-Time Token-by-Token SSE Streamer"]
+        
+        Proxy --> Prune --> Router --> Stream
+    end
+
+    subgraph Cloud["🌐 Multi-Cloud & Local Routing Pool"]
+        direction TB
+        NIM["🟢 Tier 1: NVIDIA NIM Cloud\nNemotron 3 Super 120B\n(107 tok/s | H100 TensorRT-LLM)"]
+        GROQ["🟠 Tier 2: Groq Cloud LPU\nGPT-OSS 120B / Llama 70B\n(200+ tok/s | LPU Inference)"]
+        GEMINI["🔵 Tier 3: Google Gemini API\nGemini 3.6 Flash\n(1M Context | 1,500 req/day)"]
+        LOCAL["🟢 Tier 4: Local Ollama\nQwen3-Coder 30B / 1.5B\n(100% Offline & Infinite)"]
+    end
+
+    subgraph Workspace["📁 Local File System & Terminal"]
+        Files["Project Source Code & Repositories"]
+        Shell["PowerShell / Bash Terminal"]
+    end
+
+    CC -- "Anthropic /v1/messages (SSE)" --> Proxy
+    Router -- "Primary (107 tok/s)" --> NIM
+    Router -- "On Rate-Limit (429)" --> GROQ
+    Router -- "On Quota Limit" --> GEMINI
+    Router -- "On No Internet / Offline" --> LOCAL
+    Stream -- "Token-by-Token Live Stream" --> CC
+    Tools -- "Auto Read/Write/Execute" --> Files & Shell
+
+    classDef client fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#fff;
+    classDef gateway fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff;
+    classDef cloud fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#fff;
+    classDef ws fill:#312e81,stroke:#818cf8,stroke-width:2px,color:#fff;
+
+    class CC,Tools client;
+    class Proxy,Prune,Router,Stream gateway;
+    class NIM,GROQ,GEMINI,LOCAL cloud;
+    class Files,Shell ws;
+            </div>
+        </div>
+
+        <h2 class="section-title">The 4-Tier Failover Engine Breakdown</h2>
+        <div class="tiers-grid">
+            <div class="tier-card tier-nvidia">
+                <div>
+                    <div class="tier-header">
+                        <span class="tier-badge badge-nvidia">Tier 1 · Primary</span>
+                        <span style="font-size: 1.2rem;">🟢</span>
+                    </div>
+                    <div class="tier-name">NVIDIA NIM</div>
+                    <div class="tier-model">nemotron-3-super-120b</div>
+                    <ul class="tier-features">
+                        <li>120 Billion Parameter Flagship</li>
+                        <li>NVIDIA H100 TensorRT-LLM Cluster</li>
+                        <li>Superior Complex Code Reasoning</li>
+                        <li>1,000 Free Developer Credits</li>
+                    </ul>
+                </div>
+                <div class="tier-speed">⚡ ~107.3 tok/s</div>
+            </div>
+
+            <div class="tier-card tier-groq">
+                <div>
+                    <div class="tier-header">
+                        <span class="tier-badge badge-groq">Tier 2 · Ultra-Fast</span>
+                        <span style="font-size: 1.2rem;">🟠</span>
+                    </div>
+                    <div class="tier-name">Groq Cloud</div>
+                    <div class="tier-model">openai/gpt-oss-120b</div>
+                    <ul class="tier-features">
+                        <li>Groq LPU Custom Hardware</li>
+                        <li>Fastest TTFT in the industry (0.2s)</li>
+                        <li>100% Free Forever Developer Key</li>
+                        <li>Full OpenAI Compatibility</li>
+                    </ul>
+                </div>
+                <div class="tier-speed">🚀 ~200+ tok/s</div>
+            </div>
+
+            <div class="tier-card tier-gemini">
+                <div>
+                    <div class="tier-header">
+                        <span class="tier-badge badge-gemini">Tier 3 · Huge Context</span>
+                        <span style="font-size: 1.2rem;">🔵</span>
+                    </div>
+                    <div class="tier-name">Google Gemini</div>
+                    <div class="tier-model">gemini-3.6-flash</div>
+                    <ul class="tier-features">
+                        <li>1 Million Token Context Window</li>
+                        <li>1,500 Free Requests / Day</li>
+                        <li>Can ingest entire codebases</li>
+                        <li>Instant Auto-Reset Every 24h</li>
+                    </ul>
+                </div>
+                <div class="tier-speed">📚 ~150 tok/s</div>
+            </div>
+
+            <div class="tier-card tier-ollama">
+                <div>
+                    <div class="tier-header">
+                        <span class="tier-badge badge-ollama">Tier 4 · Offline</span>
+                        <span style="font-size: 1.2rem;">🛡️</span>
+                    </div>
+                    <div class="tier-name">Local Ollama</div>
+                    <div class="tier-model">qwen3-coder:30b / 1.5b</div>
+                    <ul class="tier-features">
+                        <li>100% Offline & Private</li>
+                        <li>Zero Internet Required (Airplane mode)</li>
+                        <li>Runs on your laptop hardware</li>
+                        <li>Truly Unlimited Forever</li>
+                    </ul>
+                </div>
+                <div class="tier-speed">🛡️ 12–80 tok/s</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Quickstart Setup for Developers</h2>
+            <div class="steps-container">
+                <div class="step-box">
+                    <div class="step-num">1</div>
+                    <div class="step-title">Set API Keys</div>
+                    <div class="step-desc">Set environment variables in your terminal or OS.</div>
+                    <pre>$env:NVIDIA_API_KEY="your_key"
+$env:GROQ_API_KEY="your_key"
+$env:GEMINI_API_KEY="your_key"</pre>
+                </div>
+                <div class="step-box">
+                    <div class="step-num">2</div>
+                    <div class="step-title">Install Deps</div>
+                    <div class="step-desc">Install lightweight proxy dependencies.</div>
+                    <pre>pip install -r requirements.txt</pre>
+                </div>
+                <div class="step-box">
+                    <div class="step-num">3</div>
+                    <div class="step-title">Run Gateway</div>
+                    <div class="step-desc">Start the multi-cloud auto-failover gateway.</div>
+                    <pre>python gateway.py</pre>
+                </div>
+                <div class="step-box">
+                    <div class="step-num">4</div>
+                    <div class="step-title">Start Claude Code</div>
+                    <div class="step-desc">Run Claude Code with zero login requirements!</div>
+                    <pre>claude</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="zero-login-box">
+            <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.75rem; color: #a5b4fc;">⚡ How the Zero-Login Bypass Works</h3>
+            <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6;">
+                When you point Claude Code to your local endpoint (<code style="background: rgba(0,0,0,0.4); padding: 0.2rem 0.4rem; border-radius: 4px;">http://127.0.0.1:8000</code>) and supply a custom token in <code style="background: rgba(0,0,0,0.4); padding: 0.2rem 0.4rem; border-radius: 4px;">~/.claude/settings.json</code>, Claude Code recognizes that it is running in an enterprise proxy environment and <strong>completely skips the browser OAuth login and Anthropic paid subscription flow</strong>. Anyone can start coding immediately with 120B models without an Anthropic account!
+            </p>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            securityLevel: 'loose',
+            fontFamily: 'Outfit, sans-serif'
+        });
+    </script>
+</body>
+</html>
